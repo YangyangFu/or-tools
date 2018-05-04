@@ -851,25 +851,28 @@ install_ortools: ortoolslibs $(PATCHELF) install_dirs
 
 install_third_party:
 ifeq ($(UNIX_GFLAGS_DIR), $(OR_TOOLS_TOP)/dependencies/install)
-	$(COPY_REC) dependencies$Sinstall$Sinclude$Sgflags "$(prefix)$Sinclude"
-	$(COPY_REC) dependencies$Sinstall$Sbin$Sgflags_completions.sh "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Sinclude$Sgflags "$(prefix)$Sinclude"
+	$(COPYREC) dependencies$Sinstall$Sbin$Sgflags_completions.sh "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Slib$Slibgflags* "$(prefix)$Slib"
 endif
 ifeq ($(UNIX_GLOG_DIR), $(OR_TOOLS_TOP)/dependencies/install)
-	$(COPY_REC) dependencies$Sinstall$Sinclude$Sglog "$(prefix)$Sinclude"
+	$(COPYREC) dependencies$Sinstall$Sinclude$Sglog "$(prefix)$Sinclude"
+	$(COPYREC) dependencies$Sinstall$Slib$Slibglog* "$(prefix)$Slib"
 endif
 ifeq ($(UNIX_PROTOBUF_DIR), $(OR_TOOLS_TOP)/dependencies/install)
-	$(COPY_REC) dependencies$Sinstall$Sinclude$Sgoogle "$(prefix)$Sinclude"
-	$(COPY_REC) dependencies$Sinstall$Sbin$Sprotoc "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Sinclude$Sgoogle "$(prefix)$Sinclude"
+	$(COPYREC) dependencies$Sinstall$Sbin$Sprotoc "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Slib$Slibproto* "$(prefix)$Slib"
 endif
 ifeq ($(UNIX_CBC_DIR), $(OR_TOOLS_TOP)/dependencies/install)
-	$(COPY_REC) dependencies$Sinstall$Sinclude$Scoin "$(prefix)$Sinclude"
-	$(COPY_REC) dependencies$Sinstall$Sbin$Scbc "$(prefix)$Sbin"
-	$(COPY_REC) dependencies$Sinstall$Sbin$Sclp "$(prefix)$Sbin"
-	$(COPY_REC) dependencies$Sinstall$Slib$SlibCbc* "$(prefix)$Slib"
-	$(COPY_REC) dependencies$Sinstall$Slib$SlibCgl* "$(prefix)$Slib"
-	$(COPY_REC) dependencies$Sinstall$Slib$SlibClp* "$(prefix)$Slib"
-	$(COPY_REC) dependencies$Sinstall$Slib$SlibOsi* "$(prefix)$Slib"
-	$(COPY_REC) dependencies$Sinstall$Slib$SlibCoinUtils* "$(prefix)$Slib"
+	$(COPYREC) dependencies$Sinstall$Sinclude$Scoin "$(prefix)$Sinclude"
+	$(COPYREC) dependencies$Sinstall$Sbin$Scbc "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Sbin$Sclp "$(prefix)$Sbin"
+	$(COPYREC) dependencies$Sinstall$Slib$SlibCbc* "$(prefix)$Slib"
+	$(COPYREC) dependencies$Sinstall$Slib$SlibCgl* "$(prefix)$Slib"
+	$(COPYREC) dependencies$Sinstall$Slib$SlibClp* "$(prefix)$Slib"
+	$(COPYREC) dependencies$Sinstall$Slib$SlibOsi* "$(prefix)$Slib"
+	$(COPYREC) dependencies$Sinstall$Slib$SlibCoinUtils* "$(prefix)$Slib"
 endif
 
 .PHONY: detect_cc # Show variables used to build C++ OR-Tools.

@@ -9,26 +9,30 @@ UNIX_GFLAGS_DIR ?= $(OR_TOOLS_TOP)/dependencies/install
 UNIX_GLOG_DIR ?= $(OR_TOOLS_TOP)/dependencies/install
 UNIX_PROTOBUF_DIR ?= $(OR_TOOLS_TOP)/dependencies/install
 UNIX_CBC_DIR ?= $(OR_TOOLS_TOP)/dependencies/install
-UNIX_CLP_DIR ?= $(UNIX_CBC_DIR)
 UNIX_CGL_DIR ?= $(UNIX_CBC_DIR)
+UNIX_CLP_DIR ?= $(UNIX_CBC_DIR)
 UNIX_OSI_DIR ?= $(UNIX_CBC_DIR)
 UNIX_COINUTILS_DIR ?= $(UNIX_CBC_DIR)
-
-# Unix specific definitions
-PROTOBUF_DIR = $(UNIX_PROTOBUF_DIR)
 UNIX_SWIG_BINARY ?= swig
+
+# Variable use in others Makefiles
+PROTOBUF_DIR = $(UNIX_PROTOBUF_DIR)
 SWIG_BINARY = $(UNIX_SWIG_BINARY)
 
 # Tags of dependencies to checkout.
 GFLAGS_TAG = 2.2.1
-PROTOBUF_TAG = 3.5.1
 GLOG_TAG = 0.3.5
+PROTOBUF_TAG = 3.5.1
 CBC_TAG = 2.9.9
+CGL_TAG = 0.59.10
+CLP_TAG = 1.16.11
+OSI_TAG = 0.107.9
+COINUTILS_TAG = 2.10.14
 PATCHELF_TAG = 0.9
 
 # Main target.
 .PHONY: third_party # Build OR-Tools Prerequisite
-third_party: makefile_third_party install_third_party
+third_party: makefile_third_party build_third_party
 
 .PHONY: third_party_check # Check if "make third_party" have been run or not
 third_party_check:
@@ -44,21 +48,32 @@ endif
 ifeq ($(wildcard $(UNIX_CBC_DIR)/include/cbc/coin/CbcModel.hpp $(UNIX_CBC_DIR)/include/coin/CbcModel.hpp),)
 	$(error Third party Cbc files was not found! did you run 'make third_party' or set UNIX_CBC_DIR ?)
 endif
+ifeq ($(wildcard $(UNIX_CGL_DIR)/include/cgl/coin/plop.hpp $(UNIX_CGL_DIR)/include/coin/plop.hpp),)
+	$(error Third party Cgl files was not found! did you run 'make third_party' or set UNIX_CGL_DIR ?)
+endif
 ifeq ($(wildcard $(UNIX_CLP_DIR)/include/clp/coin/ClpSimplex.hpp $(UNIX_CLP_DIR)/include/coin/ClpSimplex.hpp),)
 	$(error Third party Clp files was not found! did you run 'make third_party' or set UNIX_CLP_DIR ?)
 endif
+ifeq ($(wildcard $(UNIX_OSI_DIR)/include/osi/coin/plop.hpp $(UNIX_OSI_DIR)/include/coin/plop.hpp),)
+	$(error Third party Osi files was not found! did you run 'make third_party' or set UNIX_OSI_DIR ?)
+endif
+ifeq ($(wildcard $(UNIX_COINUTILS_DIR)/include/coinutils/coin/plop.hpp $(UNIX_COINUTILS_DIR)/include/coin/plop.hpp),)
+	$(error Third party CoinUtils files was not found! did you run 'make third_party' or set UNIX_COINUTILS_DIR ?)
+endif
 
-.PHONY: install_third_party
-install_third_party: \
+.PHONY: build_third_party
+build_third_party: \
  archives_directory \
  install_directories \
- install_cbc \
- install_gflags \
- install_glog \
- install_protobuf
+ build_gflags \
+ build_glog \
+ build_protobuf \
+ build_cbc
 
 .PHONY: archives_directory
-archives_directory:
+archives_directory: dependencies/archives
+
+dependencies/archives:
 	$(MKDIR_P) dependencies$Sarchives
 
 .PHONY: install_directories
@@ -83,7 +98,7 @@ dependencies/install/include/coin: dependencies/install/include
 ##  GFLAGS  ##
 ##############
 # This uses gflags cmake-based build.
-install_gflags: dependencies/install/include/gflags/gflags.h
+build_gflags: dependencies/install/include/gflags/gflags.h
 
 dependencies/install/include/gflags/gflags.h: dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake/Makefile
 	cd dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake && \
@@ -110,13 +125,13 @@ DYNAMIC_GFLAGS_LNK = -L$(UNIX_GFLAGS_DIR)/lib -lgflags
 ##  GLOG  ##
 ############
 # This uses glog cmake-based build.
-install_glog: dependencies/install/include/glog/logging.h
+build_glog: dependencies/install/include/glog/logging.h
 
 dependencies/install/include/glog/logging.h: dependencies/sources/glog-$(GLOG_TAG)/build_cmake/Makefile
 	cd dependencies/sources/glog-$(GLOG_TAG)/build_cmake && $(SET_COMPILER) make -j 4 && make install
 	touch $@
 
-dependencies/sources/glog-$(GLOG_TAG)/build_cmake/Makefile: dependencies/sources/glog-$(GLOG_TAG)/CMakeLists.txt | install_gflags
+dependencies/sources/glog-$(GLOG_TAG)/build_cmake/Makefile: dependencies/sources/glog-$(GLOG_TAG)/CMakeLists.txt | build_gflags
 	-$(MKDIR) dependencies/sources/glog-$(GLOG_TAG)/build_cmake
 	cd dependencies/sources/glog-$(GLOG_TAG)/build_cmake && \
 	$(CMAKE) -D CMAKE_PREFIX_PATH="$(OR_TOOLS_TOP)/dependencies/install" \
@@ -136,7 +151,7 @@ DYNAMIC_GLOG_LNK = -L$(UNIX_GLOG_DIR)/lib -lglog
 ##  Protobuf  ##
 ################
 # This uses Protobuf cmake-based build.
-install_protobuf: dependencies/install/bin/protoc
+build_protobuf: dependencies/install/bin/protoc
 
 dependencies/install/bin/protoc: dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build/Makefile
 	cd dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build && $(SET_COMPILER) make -j 4 && make install
@@ -175,27 +190,34 @@ STATIC_PROTOBUF_LNK = $(wildcard $(UNIX_PROTOBUF_DIR)/lib*/libprotobuf.a \
                           $(UNIX_PROTOBUF_DIR)/lib/*/libprotobuf.a)
 DYNAMIC_PROTOBUF_LNK = -L$(dir $(STATIC_PROTOBUF_LNK)) -lprotobuf
 
-###############
-##  COIN-OR  ##
-###############
-# Install Coin CBC/CLP/CGL/OSI/COINUTILS.
-install_cbc: dependencies/install/bin/cbc
+###################
+##  COIN-OR-CBC  ##
+###################
+build_cbc: build_cgl dependencies/install/lib/libCbc.so
 
-dependencies/install/bin/cbc: dependencies/sources/Cbc-$(CBC_TAG)/Makefile
-	cd dependencies/sources/Cbc-$(CBC_TAG) && $(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
-
-dependencies/sources/Cbc-$(CBC_TAG)/Makefile: dependencies/sources/Cbc-$(CBC_TAG)/Makefile.in
+dependencies/install/lib/libCbc.so: dependencies/sources/Cbc-$(CBC_TAG) | dependencies/install/lib
 	cd dependencies/sources/Cbc-$(CBC_TAG) && \
-		$(SET_COMPILER) ./configure --prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-bzlib --without-lapack --enable-static --with-pic \
-		--enable-cbc-parallel ADD_CXXFLAGS="-w -DCBC_THREAD_SAFE -DCBC_NO_INTERRUPT $(MAC_VERSION)"
+		$(SET_COMPILER) ./configure \
+		--prefix=$(OR_ROOT_FULL)/dependencies/install \
+		--disable-debug \
+		--without-blas \
+		--without-lapack \
+		--without-glpk \
+		--with-pic \
+		--enable-dependency-linking \
+		--enable-cbc-parallel \
+		ADD_CXXFLAGS="-w -DCBC_THREAD_SAFE -DCBC_NO_INTERRUPT $(MAC_VERSION)" && \
+		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
 
-CBC_ARCHIVE:=https://www.coin-or.org/download/source/Cbc/Cbc-${CBC_TAG}.tgz
+CBC_ARCHIVE_NAME:=Cbc-$(CBC_TAG).tar.gz
+dependencies/sources/Cbc-$(CBC_TAG): dependencies/archives/$(CBC_ARCHIVE_NAME) | dependencies/sources
+	$(MKDIR_P) dependencies/sources/Cbc-$(CBC_TAG)
+	tar xzf dependencies/archives/$(CBC_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Cbc-$(CBC_TAG)
 
-dependencies/sources/Cbc-$(CBC_TAG)/Makefile.in:
-	wget --quiet --no-check-certificate --continue -P dependencies/archives ${CBC_ARCHIVE} || \
-		(@echo wget failed to dowload $(CBC_ARCHIVE), try running 'wget -P dependencies/archives --no-check-certificate $(CBC_ARCHIVE)' then rerun 'make third_party' && exit 1)
-	tar xzf dependencies/archives/Cbc-${CBC_TAG}.tgz -C dependencies/sources/
+CBC_ARCHIVE_URL:=https://github.com/coin-or/Cbc/archive/releases/$(CBC_TAG).tar.gz
+dependencies/archives/$(CBC_ARCHIVE_NAME): | dependencies/archives
+	wget --quiet --no-check-certificate -O dependencies/archives/$(CBC_ARCHIVE_NAME) $(CBC_ARCHIVE_URL) || \
+		(error failed to dowload $(CBC_ARCHIVE_URL))
 
 # This is needed to find CBC include files.
 CBC_COIN_DIR = $(firstword $(wildcard $(UNIX_CBC_DIR)/include/cbc/coin \
@@ -210,6 +232,73 @@ STATIC_CBC_LNK = $(UNIX_CBC_DIR)/lib$(UNIX_CBC_COIN)/libCbcSolver.a \
           $(UNIX_CBC_DIR)/lib$(UNIX_CBC_COIN)/libCbc.a
 DYNAMIC_CBC_LNK = -L$(UNIX_CBC_DIR)/lib$(UNIX_CBC_COIN) -lCbcSolver -lCbc -lOsiCbc
 
+###################
+##  COIN-OR-CGL  ##
+###################
+build_cgl: build_clp dependencies/install/lib/libCgl.so
+
+dependencies/install/lib/libCgl.so: dependencies/sources/Cgl-$(CGL_TAG) | dependencies/install/lib
+	cd dependencies/sources/Cgl-$(CGL_TAG) && \
+		$(SET_COMPILER) ./configure \
+		--prefix=$(OR_ROOT_FULL)/dependencies/install \
+		--disable-debug \
+		--without-blas \
+		--without-lapack \
+		--without-glpk \
+		--with-pic \
+		--enable-dependency-linking \
+		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+
+CGL_ARCHIVE_NAME:=Cgl-$(CGL_TAG).tar.gz
+dependencies/sources/Cgl-$(CGL_TAG): dependencies/archives/$(CGL_ARCHIVE_NAME) | dependencies/sources
+	$(MKDIR_P) dependencies/sources/Cgl-$(CGL_TAG)
+	tar xzf dependencies/archives/$(CGL_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Cgl-$(CGL_TAG)
+
+CGL_ARCHIVE_URL:=https://github.com/coin-or/Cgl/archive/releases/$(CGL_TAG).tar.gz
+dependencies/archives/$(CGL_ARCHIVE_NAME): | dependencies/archives
+	wget --quiet --no-check-certificate -O dependencies/archives/$(CGL_ARCHIVE_NAME) $(CGL_ARCHIVE_URL) || \
+		(error failed to dowload $(CGL_ARCHIVE_URL))
+
+# This is needed to find CGL include files.
+CGL_COIN_DIR = $(firstword $(wildcard $(UNIX_CGL_DIR)/include/cgl/coin \
+                                      $(UNIX_CGL_DIR)/include/coin))
+CGL_INC = -I$(UNIX_CGL_DIR)/include -I$(CGL_COIN_DIR)
+CGL_SWIG = $(CGL_INC)
+ifneq ($(wildcard $(UNIX_CGL_DIR)/lib/coin),)
+ UNIX_CGL_COIN = /coin
+endif
+STATIC_CGL_LNK = $(UNIX_CGL_DIR)/lib$(UNIX_CGL_COIN)/libCgl.a
+DYNAMIC_CGL_LNK = -L$(UNIX_CGL_DIR)/lib$(UNIX_CGL_COIN) -lCgl
+
+###################
+##  COIN-OR-CLP  ##
+###################
+build_clp: build_osi dependencies/install/lib/libClp.so
+
+dependencies/install/lib/libClp.so: dependencies/sources/Clp-$(CLP_TAG) | dependencies/install/lib
+	cd dependencies/sources/Clp-$(CLP_TAG) && \
+		$(SET_COMPILER) ./configure \
+		--prefix=$(OR_ROOT_FULL)/dependencies/install \
+		--disable-debug \
+		--without-blas \
+		--without-lapack \
+		--without-glpk \
+		--with-pic \
+		--enable-dependency-linking \
+		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+
+CLP_ARCHIVE_NAME:=Clp-$(CLP_TAG).tar.gz
+dependencies/sources/Clp-$(CLP_TAG): dependencies/archives/$(CLP_ARCHIVE_NAME) | dependencies/sources
+	$(MKDIR_P) dependencies/sources/Clp-$(CLP_TAG)
+	tar xzf dependencies/archives/$(CLP_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Clp-$(CLP_TAG)
+
+CLP_ARCHIVE_URL:=https://github.com/coin-or/Clp/archive/releases/$(CLP_TAG).tar.gz
+dependencies/archives/$(CLP_ARCHIVE_NAME): | dependencies/archives
+	wget --quiet --no-check-certificate -O dependencies/archives/$(CLP_ARCHIVE_NAME) $(CLP_ARCHIVE_URL) || \
+		(error failed to dowload $(CLP_ARCHIVE_URL))
+
 # This is needed to find CLP include files.
 CLP_COIN_DIR = $(firstword $(wildcard $(UNIX_CLP_DIR)/include/clp/coin \
                                       $(UNIX_CLP_DIR)/include/coin))
@@ -223,16 +312,34 @@ STATIC_CLP_LNK = $(UNIX_CBC_DIR)/lib$(UNIX_CLP_COIN)/libClpSolver.a \
           $(UNIX_CLP_DIR)/lib$(UNIX_CLP_COIN)/libClp.a
 DYNAMIC_CLP_LNK = -L$(UNIX_CLP_DIR)/lib$(UNIX_CLP_COIN) -lClpSolver -lClp -lOsiClp
 
-# This is needed to find CGL include files.
-CGL_COIN_DIR = $(firstword $(wildcard $(UNIX_CGL_DIR)/include/cgl/coin \
-                                      $(UNIX_CGL_DIR)/include/coin))
-CGL_INC = -I$(UNIX_CGL_DIR)/include -I$(CGL_COIN_DIR)
-CGL_SWIG = $(CGL_INC)
-ifneq ($(wildcard $(UNIX_CGL_DIR)/lib/coin),)
- UNIX_CGL_COIN = /coin
-endif
-STATIC_CGL_LNK = $(UNIX_CGL_DIR)/lib$(UNIX_CGL_COIN)/libCgl.a
-DYNAMIC_CGL_LNK = -L$(UNIX_CGL_DIR)/lib$(UNIX_CGL_COIN) -lCgl
+###################
+##  COIN-OR-OSI  ##
+###################
+build_osi: build_coinutils dependencies/install/lib/libOsi.so
+
+dependencies/install/lib/libOsi.so: dependencies/sources/Osi-$(OSI_TAG) | dependencies/install/lib
+	cd dependencies/sources/Osi-$(OSI_TAG) && \
+		$(SET_COMPILER) ./configure \
+		--prefix=$(OR_ROOT_FULL)/dependencies/install \
+		--disable-debug \
+		--without-blas \
+		--without-lapack \
+		--without-glpk \
+		--with-pic \
+		--with-coinutils \
+		--enable-dependency-linking \
+		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+
+OSI_ARCHIVE_NAME:=Osi-$(OSI_TAG).tar.gz
+dependencies/sources/Osi-$(OSI_TAG): dependencies/archives/$(OSI_ARCHIVE_NAME) | dependencies/sources
+	$(MKDIR_P) dependencies/sources/Osi-$(OSI_TAG)
+	tar xzf dependencies/archives/$(OSI_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Osi-$(OSI_TAG)
+
+OSI_ARCHIVE_URL:=https://github.com/coin-or/Osi/archive/releases/$(OSI_TAG).tar.gz
+dependencies/archives/$(OSI_ARCHIVE_NAME): | dependencies/archives
+	wget --quiet --no-check-certificate -O dependencies/archives/$(OSI_ARCHIVE_NAME) $(OSI_ARCHIVE_URL) || \
+		(error failed to dowload $(OSI_ARCHIVE_URL))
 
 # This is needed to find OSI include files.
 OSI_COIN_DIR = $(firstword $(wildcard $(UNIX_OSI_DIR)/include/osi/coin \
@@ -245,6 +352,34 @@ endif
 STATIC_OSI_LNK = $(UNIX_OSI_DIR)/lib$(UNIX_OSI_COIN)/libOsi.a
 DYNAMIC_OSI_LNK = -L$(UNIX_OSI_DIR)/lib$(UNIX_OSI_COIN) -lOsi
 
+#########################
+##  COIN-OR-COINUTILS  ##
+#########################
+build_coinutils: dependencies/install/lib/libCoinUtils.so
+
+dependencies/install/lib/libCoinUtils.so: dependencies/sources/CoinUtils-$(COINUTILS_TAG) | dependencies/install/lib
+	cd dependencies/sources/CoinUtils-$(COINUTILS_TAG) && \
+		$(SET_COMPILER) ./configure \
+		--prefix=$(OR_ROOT_FULL)/dependencies/install \
+		--disable-debug \
+		--without-blas \
+		--without-lapack \
+		--without-glpk \
+		--with-pic \
+		--enable-dependency-linking \
+		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+
+COINUTILS_ARCHIVE_NAME:=CoinUtils-$(COINUTILS_TAG).tar.gz
+dependencies/sources/CoinUtils-$(COINUTILS_TAG): dependencies/archives/$(COINUTILS_ARCHIVE_NAME) | dependencies/sources
+	$(MKDIR_P) dependencies/sources/CoinUtils-$(COINUTILS_TAG)
+	tar xzf dependencies/archives/$(COINUTILS_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/CoinUtils-$(COINUTILS_TAG)
+
+COINUTILS_ARCHIVE_URL:=https://github.com/coin-or/CoinUtils/archive/releases/$(COINUTILS_TAG).tar.gz
+dependencies/archives/$(COINUTILS_ARCHIVE_NAME): | dependencies/archives
+	wget --quiet --no-check-certificate -O dependencies/archives/$(COINUTILS_ARCHIVE_NAME) $(COINUTILS_ARCHIVE_URL) || \
+		(error failed to dowload $(COINUTILS_ARCHIVE_URL))
+
 # This is needed to find COINUTILS include files.
 COINUTILS_COIN_DIR = $(firstword $(wildcard $(UNIX_COINUTILS_DIR)/include/coinutils/coin \
                                       $(UNIX_COINUTILS_DIR)/include/coin))
@@ -255,6 +390,10 @@ ifneq ($(wildcard $(UNIX_COINUTILS_DIR)/lib/coin),)
 endif
 STATIC_COINUTILS_LNK = $(UNIX_COINUTILS_DIR)/lib$(UNIX_COINUTILS_COIN)/libCoinUtils.a
 DYNAMIC_COINUTILS_LNK = -L$(UNIX_COINUTILS_DIR)/lib$(UNIX_COINUTILS_COIN) -lCoinUtils
+
+############
+##  MISC  ##
+############
 
 # Agregate all previous coin packages
 COIN_INC = \
@@ -299,7 +438,7 @@ else
 	OR_TOOLS_LNK += $(DYNAMIC_PROTOBUF_LNK)
 endif
 ifeq ($(UNIX_CBC_DIR), $(OR_TOOLS_TOP)/dependencies/install)
-  DEPENDENCIES_LNK += $(STATIC_COIN_LNK)
+  DEPENDENCIES_LNK += $(DYNAMIC_COIN_LNK)
 else
   DEPENDENCIES_LNK += $(DYNAMIC_COIN_LNK)
 	OR_TOOLS_LNK += $(DYNAMIC_COIN_LNK)
@@ -327,17 +466,24 @@ dependencies/sources/patchelf-$(PATCHELF_TAG)/configure:
 clean_third_party:
 	-$(DEL) Makefile.local
 	-$(DELREC) dependencies/archives/Cbc*
+	-$(DELREC) dependencies/archives/Cgl*
+	-$(DELREC) dependencies/archives/Clp*
+	-$(DELREC) dependencies/archives/Osi*
+	-$(DELREC) dependencies/archives/CoinUtils*
 	-$(DELREC) dependencies/archives
 	-$(DELREC) dependencies/sources/Cbc*
-	-$(DELREC) dependencies/sources/coin-cbc*
+	-$(DELREC) dependencies/sources/Cgl*
+	-$(DELREC) dependencies/sources/Clp*
+	-$(DELREC) dependencies/sources/Osi*
+	-$(DELREC) dependencies/sources/CoinUtils*
 	-$(DELREC) dependencies/sources/gflags*
 	-$(DELREC) dependencies/sources/glog*
+	-$(DELREC) dependencies/sources/protobuf*
 	-$(DELREC) dependencies/sources/glpk*
 	-$(DELREC) dependencies/sources/google*
 	-$(DELREC) dependencies/sources/mono*
 	-$(DELREC) dependencies/sources/pcre*
 	-$(DELREC) dependencies/sources/swig*
-	-$(DELREC) dependencies/sources/protobuf*
 	-$(DELREC) dependencies/sources/sparsehash*
 	-$(DELREC) dependencies/sources/libtool*
 	-$(DELREC) dependencies/sources/autoconf*

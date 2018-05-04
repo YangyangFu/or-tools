@@ -828,7 +828,9 @@ install_dirs:
 	$(MKDIR) "$(prefix)$Sinclude$Sortools$Sutil"
 
 .PHONY: install_cc # Install C++ OR-Tools to $(prefix)/.
-install_cc: ortoolslibs $(PATCHELF) install_dirs
+install_cc: install_ortools install_third_party
+
+install_ortools: ortoolslibs $(PATCHELF) install_dirs
 	$(COPY) $(LIB_DIR)$S$(LIB_PREFIX)ortools.$(LIB_SUFFIX) "$(prefix)$Slib"
 	$(COPY) ortools$Salgorithms$S*.h "$(prefix)$Sinclude$Sortools$Salgorithms"
 	$(COPY) ortools$Sbase$S*.h "$(prefix)$Sinclude$Sortools$Sbase"
@@ -846,6 +848,29 @@ install_cc: ortoolslibs $(PATCHELF) install_dirs
 	$(COPY) ortools$Ssat$S*.h "$(prefix)$Sinclude$Sortools$Ssat"
 	$(COPY) ortools$Sgen$Sortools$Ssat$S*.pb.h "$(prefix)$Sinclude$Sortools$Ssat"
 	$(COPY) ortools$Sutil$S*.h "$(prefix)$Sinclude$Sortools$Sutil"
+
+install_third_party:
+ifeq ($(UNIX_GFLAGS_DIR), $(OR_TOOLS_TOP)/dependencies/install)
+	$(COPY_REC) dependencies$Sinstall$Sinclude$Sgflags "$(prefix)$Sinclude"
+	$(COPY_REC) dependencies$Sinstall$Sbin$Sgflags_completions.sh "$(prefix)$Sbin"
+endif
+ifeq ($(UNIX_GLOG_DIR), $(OR_TOOLS_TOP)/dependencies/install)
+	$(COPY_REC) dependencies$Sinstall$Sinclude$Sglog "$(prefix)$Sinclude"
+endif
+ifeq ($(UNIX_PROTOBUF_DIR), $(OR_TOOLS_TOP)/dependencies/install)
+	$(COPY_REC) dependencies$Sinstall$Sinclude$Sgoogle "$(prefix)$Sinclude"
+	$(COPY_REC) dependencies$Sinstall$Sbin$Sprotoc "$(prefix)$Sbin"
+endif
+ifeq ($(UNIX_CBC_DIR), $(OR_TOOLS_TOP)/dependencies/install)
+	$(COPY_REC) dependencies$Sinstall$Sinclude$Scoin "$(prefix)$Sinclude"
+	$(COPY_REC) dependencies$Sinstall$Sbin$Scbc "$(prefix)$Sbin"
+	$(COPY_REC) dependencies$Sinstall$Sbin$Sclp "$(prefix)$Sbin"
+	$(COPY_REC) dependencies$Sinstall$Slib$SlibCbc* "$(prefix)$Slib"
+	$(COPY_REC) dependencies$Sinstall$Slib$SlibCgl* "$(prefix)$Slib"
+	$(COPY_REC) dependencies$Sinstall$Slib$SlibClp* "$(prefix)$Slib"
+	$(COPY_REC) dependencies$Sinstall$Slib$SlibOsi* "$(prefix)$Slib"
+	$(COPY_REC) dependencies$Sinstall$Slib$SlibCoinUtils* "$(prefix)$Slib"
+endif
 
 .PHONY: detect_cc # Show variables used to build C++ OR-Tools.
 detect_cc:

@@ -64,7 +64,7 @@ endif
 .PHONY: build_third_party
 build_third_party: \
  archives_directory \
- install_directories \
+ install_deps_directories \
  build_gflags \
  build_glog \
  build_protobuf \
@@ -76,8 +76,11 @@ archives_directory: dependencies/archives
 dependencies/archives:
 	$(MKDIR_P) dependencies$Sarchives
 
-.PHONY: install_directories
-install_directories: dependencies/install/bin dependencies/install/lib dependencies/install/include/coin
+.PHONY: install_deps_directories
+install_deps_directories: \
+ dependencies/install/bin \
+ dependencies/install/lib \
+ dependencies/install/include/coin
 
 dependencies/install:
 	$(MKDIR_P) dependencies$Sinstall

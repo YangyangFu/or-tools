@@ -43,8 +43,8 @@ endif
 
 .PHONY: build_third_party
 build_third_party: \
- install_directories \
  archives_directory \
+ install_deps_directories \
  install_zlib \
  install_gflags \
  install_glog \
@@ -60,8 +60,20 @@ download_third_party: \
  dependencies/sources/Cbc-$(CBC_TAG)/configure
 
 # Directories
-.PHONY: install_directories
-install_directories: dependencies/install/bin dependencies/install/lib/coin dependencies/install/include/coin
+.PHONY: archives_directory
+archives_directory: dependencies/archives
+
+dependencies/archives:
+	$(MKDIR_P) dependencies$Sarchives
+
+.PHONY: install_deps_directories
+install_deps_directories: \
+ dependencies/install/bin \
+ dependencies/install/lib/coin \
+ dependencies/install/include/coin
+
+dependencies/install:
+	$(MKDIR_P) dependencies$Sinstall
 
 dependencies/install/bin: dependencies/install
 	$(MKDIR_P) dependencies$Sinstall$Sbin
@@ -72,18 +84,11 @@ dependencies/install/lib: dependencies/install
 dependencies/install/lib/coin: dependencies/install/lib
 	$(MKDIR_P) dependencies$Sinstall$Slib$Scoin
 
-dependencies/install:
-	$(MKDIR_P) dependencies$Sinstall
-
 dependencies/install/include: dependencies/install
 	$(MKDIR_P) dependencies$Sinstall$Sinclude
 
 dependencies/install/include/coin: dependencies/install/include
 	$(MKDIR_P) dependencies$Sinstall$Sinclude$Scoin
-
-.PHONY: archives_directory
-archives_directory:
-	-$(MKDIR_P) dependencies$Sarchives
 
 # Install zlib
 .PHONY: install_zlib

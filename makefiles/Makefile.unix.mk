@@ -82,7 +82,8 @@ ifdef UNIX_CPLEX_DIR
   CPLEX_SWIG = $(CPLEX_INC)
 endif
 
-SWIG_INC = $(CLP_SWIG) $(CBC_SWIG) $(COIN_SWIG) \
+SWIG_INC = \
+ $(GFLAGS_SWIG) $(GLOG_SWIG) $(PROTOBUF_SWIG) $(COIN_SWIG) \
  -DUSE_GLOP -DUSE_BOP \
  $(GLPK_SWIG) $(SCIP_SWIG) $(GUROBI_SWIG) $(CPLEX_SWIG)
 
@@ -91,7 +92,7 @@ DEBUG = -O4 -DNDEBUG
 JNIDEBUG = -O1 -DNDEBUG
 
 ifeq ($(PLATFORM),LINUX)
-  CCC = g++ -fPIC -std=c++0x -fwrapv
+  CCC = g++ -fPIC -std=c++11 -fwrapv
   DYNAMIC_LD = g++ -shared
   MONO = LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) $(MONO_EXECUTABLE)
 
@@ -106,20 +107,35 @@ ifeq ($(PLATFORM),LINUX)
     else
       SCIP_ARCH = linux.x86.gnu.opt
     endif
-    SCIP_LNK = $(UNIX_SCIP_DIR)/lib/static/libscip.$(SCIP_ARCH).a $(UNIX_SCIP_DIR)/lib/static/libnlpi.cppad.$(SCIP_ARCH).a $(UNIX_SCIP_DIR)/lib/static/liblpispx2.$(SCIP_ARCH).a $(UNIX_SCIP_DIR)/lib/static/libsoplex.$(SCIP_ARCH).a $(UNIX_SCIP_DIR)/lib/static/libtpitny.$(SCIP_ARCH).a
+    SCIP_LNK = \
+ $(UNIX_SCIP_DIR)/lib/static/libscip.$(SCIP_ARCH).a \
+ $(UNIX_SCIP_DIR)/lib/static/libnlpi.cppad.$(SCIP_ARCH).a \
+ $(UNIX_SCIP_DIR)/lib/static/liblpispx2.$(SCIP_ARCH).a \
+ $(UNIX_SCIP_DIR)/lib/static/libsoplex.$(SCIP_ARCH).a \
+ $(UNIX_SCIP_DIR)/lib/static/libtpitny.$(SCIP_ARCH).a
   endif
   ifdef UNIX_GUROBI_DIR
     ifeq ($(PTRLENGTH),64)
-      GUROBI_LNK = -Wl,-rpath $(UNIX_GUROBI_DIR)/linux64/lib/ -L$(UNIX_GUROBI_DIR)/linux64/lib/ -m64 -lc -ldl -lm -lpthread -lgurobi$(GUROBI_LIB_VERSION)
+      GUROBI_LNK = \
+ -Wl,-rpath $(UNIX_GUROBI_DIR)/linux64/lib/ \
+ -L$(UNIX_GUROBI_DIR)/linux64/lib/ -m64 -lc -ldl -lm -lpthread \
+ -lgurobi$(GUROBI_LIB_VERSION)
     else
-      GUROBI_LNK = -Wl,-rpath $(UNIX_GUROBI_DIR)/linux32/lib/ -L$(UNIX_GUROBI_DIR)/linux32/lib/ -m32 -lc -ldl -lm -lpthread -lgurobi$(GUROBI_LIB_VERSION)
+      GUROBI_LNK = \
+ -Wl,-rpath $(UNIX_GUROBI_DIR)/linux32/lib/ \
+ -L$(UNIX_GUROBI_DIR)/linux32/lib/ -m32 -lc -ldl -lm -lpthread \
+ -lgurobi$(GUROBI_LIB_VERSION)
     endif
   endif
   ifdef UNIX_CPLEX_DIR
     ifeq ($(PTRLENGTH),64)
-      CPLEX_LNK = $(UNIX_CPLEX_DIR)/cplex/lib/x86-64_linux/static_pic/libcplex.a -lm -lpthread
+      CPLEX_LNK = \
+ $(UNIX_CPLEX_DIR)/cplex/lib/x86-64_linux/static_pic/libcplex.a \
+ -lm -lpthread
     else
-      CPLEX_LNK = $(UNIX_CPLEX_DIR)/cplex/lib/x86_linux/static_pic/libcplex.a -lm -lpthread
+      CPLEX_LNK = \
+ $(UNIX_CPLEX_DIR)/cplex/lib/x86_linux/static_pic/libcplex.a \
+ -lm -lpthread
     endif
   endif
   SYS_LNK = -lrt -lpthread
@@ -139,7 +155,10 @@ endif  # LINUX
 ifeq ($(PLATFORM),MACOSX)
   MAC_VERSION = -mmacosx-version-min=$(MAC_MIN_VERSION)
   CCC = clang++ -fPIC -std=c++11  $(MAC_VERSION) -stdlib=libc++
-  DYNAMIC_LD = ld -arch x86_64 -bundle -flat_namespace -undefined suppress -macosx_version_min $(MAC_MIN_VERSION) -lSystem -compatibility_version $(OR_TOOLS_SHORT_VERSION) -current_version $(OR_TOOLS_SHORT_VERSION)
+  DYNAMIC_LD = ld -arch x86_64 -bundle -flat_namespace -undefined suppress \
+ -macosx_version_min $(MAC_MIN_VERSION) \
+ -lSystem -compatibility_version $(OR_TOOLS_SHORT_VERSION) \
+ -current_version $(OR_TOOLS_SHORT_VERSION)
 
   MONO =  DYLD_FALLBACK_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) $(MONO_EXECUTABLE)
 
@@ -149,13 +168,22 @@ ifeq ($(PLATFORM),MACOSX)
   endif
   ifdef UNIX_SCIP_DIR
     SCIP_ARCH = darwin.x86_64.gnu.opt
-    SCIP_LNK = -force_load $(UNIX_SCIP_DIR)/lib/static/libscip.$(SCIP_ARCH).a $(UNIX_SCIP_DIR)/lib/static/libnlpi.cppad.$(SCIP_ARCH).a -force_load $(UNIX_SCIP_DIR)/lib/static/liblpispx2.$(SCIP_ARCH).a -force_load $(UNIX_SCIP_DIR)/lib/static/libsoplex.$(SCIP_ARCH).a -force_load $(UNIX_SCIP_DIR)/lib/static/libtpitny.$(SCIP_ARCH).a
+    SCIP_LNK = \
+ -force_load $(UNIX_SCIP_DIR)/lib/static/libscip.$(SCIP_ARCH).a \
+ $(UNIX_SCIP_DIR)/lib/static/libnlpi.cppad.$(SCIP_ARCH).a \
+ -force_load $(UNIX_SCIP_DIR)/lib/static/liblpispx2.$(SCIP_ARCH).a \
+ -force_load $(UNIX_SCIP_DIR)/lib/static/libsoplex.$(SCIP_ARCH).a \
+ -force_load $(UNIX_SCIP_DIR)/lib/static/libtpitny.$(SCIP_ARCH).a
   endif
   ifdef UNIX_GUROBI_DIR
-    GUROBI_LNK = -L$(UNIX_GUROBI_DIR)/mac64/bin/ -lc -ldl -lm -lpthread -lgurobi$(GUROBI_LIB_VERSION)
+    GUROBI_LNK = \
+ -L$(UNIX_GUROBI_DIR)/mac64/bin/ -lc -ldl -lm -lpthread \
+ -lgurobi$(GUROBI_LIB_VERSION)
   endif
   ifdef UNIX_CPLEX_DIR
-    CPLEX_LNK = -force_load $(UNIX_CPLEX_DIR)/cplex/lib/x86-64_osx/static_pic/libcplex.a -lm -lpthread -framework CoreFoundation -framework IOKit
+    CPLEX_LNK = \
+ -force_load $(UNIX_CPLEX_DIR)/cplex/lib/x86-64_osx/static_pic/libcplex.a \
+ -lm -lpthread -framework CoreFoundation -framework IOKit
   endif
   SYS_LNK =
   SET_COMPILER = CXX="$(CCC)"
@@ -167,7 +195,10 @@ ifeq ($(PLATFORM),MACOSX)
 
   LIB_SUFFIX = dylib
   SWIG_LIB_SUFFIX = so# To overcome a bug in Mac OS X loader.
-  LINK_CMD = ld -arch x86_64 -dylib -flat_namespace -undefined suppress -macosx_version_min $(MAC_MIN_VERSION) -lSystem -compatibility_version $(OR_TOOLS_SHORT_VERSION) -current_version $(OR_TOOLS_SHORT_VERSION)
+  LINK_CMD = ld -arch x86_64 -dylib -flat_namespace -undefined suppress \
+ -macosx_version_min $(MAC_MIN_VERSION) -lSystem \
+ -compatibility_version $(OR_TOOLS_SHORT_VERSION) \
+ -current_version $(OR_TOOLS_SHORT_VERSION)
   LINK_PREFIX = -o # Space needed.
   PRE_LIB = -L$(OR_ROOT)lib -l
   POST_LIB =

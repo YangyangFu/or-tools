@@ -18,7 +18,7 @@ WINDOWS_COINUTILS_DIR ?= $(WINDOWS_CBC_DIR)
 WINDOWS_SWIG_BINARY ?= "$(OR_ROOT_FULL)\\dependencies\\install\\swigwin-$(SWIG_TAG)\\swig.exe"
 
 # Variable use in others Makefiles
-PROTOBUF_DIR = $(WINDOWS_PROTOBUF_DIR)
+PROTOC = "$(WINDOWS_PROTOBUF_DIR)\\bin\\protoc.exe"
 SWIG_BINARY = $(WINDOWS_SWIG_BINARY)
 
 # tags of dependencies to checkout.
@@ -332,7 +332,6 @@ detect_third_party:
 	@echo GLOG_INC = $(GLOG_INC)
 	@echo GLOG_LNK = $(GLOG_LNK)
 	@echo WINDOWS_PROTOBUF_DIR = $(WINDOWS_PROTOBUF_DIR)
-	@echo PROTOBUF_DIR = $(PROTOBUF_DIR)
 	@echo PROTOBUF_INC = $(PROTOBUF_INC)
 	@echo PROTOBUF_LNK = $(PROTOBUF_LNK)
 	@echo WINDOWS_CBC_DIR = $(WINDOWS_CBC_DIR)

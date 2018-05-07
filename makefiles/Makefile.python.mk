@@ -139,9 +139,9 @@ else
 endif
 	cd dependencies$Ssources$Sprotobuf-$(PROTOBUF_TAG)$Spython && "$(PYTHON_EXECUTABLE)" setup.py build
 
-pyinit: $(GEN_DIR)$Sortools$S__init__.py
+pyinit: $(GEN_DIR)/ortools/__init__.py
 
-$(GEN_DIR)$Sortools$S__init__.py:
+$(GEN_DIR)/ortools/__init__.py:
 	$(COPY) $(SRC_DIR)$Sortools$S__init__.py $(GEN_DIR)$Sortools$S__init__.py
 
 # pywrapknapsack_solver
@@ -198,22 +198,22 @@ endif
 pycp: $(GEN_DIR)/ortools/constraint_solver/pywrapcp.py $(LIB_DIR)/_pywrapcp.$(SWIG_LIB_SUFFIX)
 
 $(GEN_DIR)/ortools/constraint_solver/search_limit_pb2.py: $(SRC_DIR)/ortools/constraint_solver/search_limit.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Ssearch_limit.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Ssearch_limit.proto
 
 $(GEN_DIR)/ortools/constraint_solver/model_pb2.py: $(SRC_DIR)/ortools/constraint_solver/model.proto $(GEN_DIR)/ortools/constraint_solver/search_limit_pb2.py
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Smodel.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Smodel.proto
 
 $(GEN_DIR)/ortools/constraint_solver/assignment_pb2.py: $(SRC_DIR)/ortools/constraint_solver/assignment.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Sassignment.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Sassignment.proto
 
 $(GEN_DIR)/ortools/constraint_solver/solver_parameters_pb2.py: $(SRC_DIR)/ortools/constraint_solver/solver_parameters.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Ssolver_parameters.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Ssolver_parameters.proto
 
 $(GEN_DIR)/ortools/constraint_solver/routing_enums_pb2.py: $(SRC_DIR)/ortools/constraint_solver/routing_enums.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Srouting_enums.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Srouting_enums.proto
 
 $(GEN_DIR)/ortools/constraint_solver/routing_parameters_pb2.py: $(SRC_DIR)/ortools/constraint_solver/routing_parameters.proto $(GEN_DIR)/ortools/constraint_solver/solver_parameters_pb2.py $(GEN_DIR)/ortools/constraint_solver/routing_enums_pb2.py
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Srouting_parameters.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)$Sortools$Sconstraint_solver$Srouting_parameters.proto
 
 $(GEN_DIR)/ortools/constraint_solver/pywrapcp.py: \
 		$(SRC_DIR)/ortools/base/base.i \
@@ -256,10 +256,10 @@ endif
 pylp: $(LIB_DIR)/_pywraplp.$(SWIG_LIB_SUFFIX) $(GEN_DIR)/ortools/linear_solver/pywraplp.py
 
 $(GEN_DIR)/ortools/util/optional_boolean_pb2.py: $(SRC_DIR)/ortools/util/optional_boolean.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/util/optional_boolean.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/util/optional_boolean.proto
 
 $(GEN_DIR)/ortools/linear_solver/linear_solver_pb2.py: $(SRC_DIR)/ortools/linear_solver/linear_solver.proto $(GEN_DIR)/ortools/util/optional_boolean_pb2.py
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/linear_solver/linear_solver.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/linear_solver/linear_solver.proto
 
 $(GEN_DIR)/ortools/linear_solver/pywraplp.py: \
 		$(SRC_DIR)/ortools/base/base.i \
@@ -290,10 +290,10 @@ endif
 pysat: $(LIB_DIR)/_pywrapsat.$(SWIG_LIB_SUFFIX) $(GEN_DIR)/ortools/sat/pywrapsat.py
 
 $(GEN_DIR)/ortools/sat/cp_model_pb2.py: $(SRC_DIR)/ortools/sat/cp_model.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/sat/cp_model.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/sat/cp_model.proto
 
 $(GEN_DIR)/ortools/sat/sat_parameters_pb2.py: $(SRC_DIR)/ortools/sat/sat_parameters.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/sat/sat_parameters.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/sat/sat_parameters.proto
 
 $(GEN_DIR)/ortools/sat/pywrapsat.py: \
 		$(SRC_DIR)/ortools/base/base.i \
@@ -324,7 +324,7 @@ endif
 pyrcpsp: $(LIB_DIR)/_pywraprcpsp.$(SWIG_LIB_SUFFIX) $(GEN_DIR)/ortools/data/pywraprcpsp.py
 
 $(GEN_DIR)/ortools/data/rcpsp_pb2.py: $(SRC_DIR)/ortools/data/rcpsp.proto
-	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/data/rcpsp.proto
+	$(PROTOC) --proto_path=$(INC_DIR) --python_out=$(GEN_DIR) $(SRC_DIR)/ortools/data/rcpsp.proto
 
 $(GEN_DIR)/ortools/data/pywraprcpsp.py: \
 		$(SRC_DIR)/ortools/data/rcpsp_parser.h \

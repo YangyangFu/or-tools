@@ -4,13 +4,34 @@ help_third_party:
 	@tools\grep.exe "^.PHONY: .* #" $(CURDIR)/makefiles/Makefile.third_party.win.mk | tools\sed.exe "s/\.PHONY: \(.*\) # \(.*\)/\1\t\2/"
 	@echo off & echo(
 
+# Checks if the user has overwritten default libraries and binaries.
+WINDOWS_ZLIB_DIR ?= $(OR_ROOT_FULL)\\dependencies\\install
+WINDOWS_ZLIB_NAME ?= zlib.lib
+WINDOWS_GFLAGS_DIR ?= $(OR_ROOT_FULL)\\dependencies\\install
+WINDOWS_GLOG_DIR ?= $(OR_ROOT_FULL)\\dependencies\\install
+WINDOWS_PROTOBUF_DIR ?= $(OR_ROOT_FULL)\\dependencies\\install
+WINDOWS_CBC_DIR ?= $(OR_ROOT_FULL)\\dependencies\\install
+WINDOWS_CGL_DIR ?= $(WINDOWS_CBC_DIR)
+WINDOWS_CLP_DIR ?= $(WINDOWS_CBC_DIR)
+WINDOWS_OSI_DIR ?= $(WINDOWS_CBC_DIR)
+WINDOWS_COINUTILS_DIR ?= $(WINDOWS_CBC_DIR)
+WINDOWS_SWIG_BINARY ?= "$(OR_ROOT_FULL)\\dependencies\\install\\swigwin-$(SWIG_TAG)\\swig.exe"
+
+# Variable use in others Makefiles
+PROTOBUF_DIR = $(WINDOWS_PROTOBUF_DIR)
+SWIG_BINARY = $(WINDOWS_SWIG_BINARY)
+
 # tags of dependencies to checkout.
-GFLAGS_TAG = 2.2.1
-PROTOBUF_TAG = 3.5.1
-GLOG_TAG = 0.3.5
-CBC_TAG = 2.9.9
 ZLIB_TAG = 1.2.11
 ZLIB_ARCHIVE_TAG = 1211
+GFLAGS_TAG = 2.2.1
+GLOG_TAG = 0.3.5
+PROTOBUF_TAG = 3.5.1
+CBC_TAG = 2.9.9
+CGL_TAG = 0.59.10
+CLP_TAG = 1.16.11
+OSI_TAG = 0.107.9
+COINUTILS_TAG = 2.10.14
 SWIG_TAG = 3.0.12
 
 # Added in support of clean third party targets
@@ -34,11 +55,20 @@ endif
 ifeq ($(wildcard $(WINDOWS_PROTOBUF_DIR)/include/google/protobuf/descriptor.h),)
 	$(error Third party Protobuf files was not found! did you run 'make third_party' or set WINDOWS_PROTOBUF_DIR ?)
 endif
-ifeq ($(wildcard $(WINDOWS_CBC_DIR)/include/coin/CbcModel.hpp),)
+ifeq ($(wildcard $(WINDOWS_CBC_DIR)/include/cbc/coin/CbcModel.hpp $(WINDOWS_CBC_DIR)/include/coin/CbcModel.hpp),)
 	$(error Third party Cbc files was not found! did you run 'make third_party' or set WINDOWS_CBC_DIR ?)
 endif
-ifeq ($(wildcard $(WINDOWS_CLP_DIR)/include/coin/ClpSimplex.hpp),)
+ifeq ($(wildcard $(WINDOWS_CGL_DIR)/include/cgl/coin/CglParam.hpp $(WINDOWS_CGL_DIR)/include/coin/CglParam.hpp),)
+	$(error Third party Cgl files was not found! did you run 'make third_party' or set WINDOWS_CGL_DIR ?)
+endif
+ifeq ($(wildcard $(WINDOWS_CLP_DIR)/include/clp/coin/ClpModel.hpp $(WINDOWS_CLP_DIR)/include/coin/ClpSimplex.hpp),)
 	$(error Third party Clp files was not found! did you run 'make third_party' or set WINDOWS_CLP_DIR ?)
+endif
+ifeq ($(wildcard $(WINDOWS_OSI_DIR)/include/osi/coin/OsiSolverInterface.hpp $(WINDOWS_OSI_DIR)/include/coin/OsiSolverInterface.hpp),)
+	$(error Third party Osi files was not found! did you run 'make third_party' or set WINDOWS_OSI_DIR ?)
+endif
+ifeq ($(wildcard $(WINDOWS_COINUTILS_DIR)/include/coinutils/coin/CoinModel.hpp $(WINDOWS_COINUTILS_DIR)/include/coin/CoinModel.hpp),)
+	$(error Third party CoinUtils files was not found! did you run 'make third_party' or set WINDOWS_COINUTILS_DIR ?)
 endif
 
 .PHONY: build_third_party

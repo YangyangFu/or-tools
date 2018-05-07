@@ -40,6 +40,7 @@ DYNAMIC_LD = link /DLL /LTCG /debug
 S = \\
 CPSEP =;
 
+CD = cd
 COPY = copy
 COPYREC = xcopy
 DEL = del
@@ -67,7 +68,6 @@ $(error Please add "cmake" to your PATH)
 endif
 
 # Add some additional macros
-CD = cd
 ATTRIB = attrib
 TASKKILL = taskkill
 

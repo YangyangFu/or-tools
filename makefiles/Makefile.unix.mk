@@ -149,8 +149,10 @@ ifeq ($(PLATFORM),LINUX)
   SWIG_LIB_SUFFIX = so
   LINK_CMD = g++ -shared
   LINK_PREFIX = -o # Need the space.
-  PRE_LIB = -Wl,-rpath $(OR_ROOT_FULL)/lib -L$(OR_ROOT_FULL)/lib -l
+  PRE_LIB = -Wl,-rpath,"\$$ORIGIN:$(OR_ROOT_FULL)/dependencies/install/lib" -L$(OR_ROOT_FULL)/lib -l
+  #PRE_LIB = -Wl,-rpath $(OR_ROOT_FULL)/lib -L$(OR_ROOT_FULL)/lib -l
   POST_LIB =
+  LINK_FLAGS = -Wl,-rpath,"\$$ORIGIN:$(OR_ROOT_FULL)/dependencies/install/lib"
 endif  # LINUX
 ifeq ($(PLATFORM),MACOSX)
   MAC_VERSION = -mmacosx-version-min=$(MAC_MIN_VERSION)

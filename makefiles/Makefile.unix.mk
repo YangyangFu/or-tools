@@ -151,7 +151,7 @@ ifeq ($(PLATFORM),LINUX)
   PRE_LIB = -L$(OR_ROOT_FULL)/lib -l
   #PRE_LIB = -Wl,-rpath $(OR_ROOT_FULL)/lib -L$(OR_ROOT_FULL)/lib -l
   POST_LIB =
-  LINK_FLAGS = -Wl,-rpath,"\$$ORIGIN:\$$ORIGIN/../dependencies/install/lib"
+  LINK_FLAGS = -Wl,-rpath,"\$$ORIGIN:\$$ORIGIN/../lib:\$$ORIGIN/../dependencies/install/lib"
 endif  # LINUX
 ifeq ($(PLATFORM),MACOSX)
   MAC_VERSION = -mmacosx-version-min=$(MAC_MIN_VERSION)
@@ -202,7 +202,7 @@ ifeq ($(PLATFORM),MACOSX)
  -current_version $(OR_TOOLS_SHORT_VERSION)
   PRE_LIB = -L$(OR_ROOT)lib -l
   POST_LIB =
-  LINK_FLAGS = -Wl,-rpath,"@loader_path;@loader_path/../dependencies/install/lib"
+  LINK_FLAGS = -Wl,-rpath,"@loader_path;@loader_path/../lib;@loader_path/../dependencies/install/lib"
 endif  # MAC OS X
 
 DEPENDENCIES_INC = -I$(INC_DIR) -I$(EX_DIR) -I$(GEN_DIR) \

@@ -87,39 +87,37 @@ install_deps_directories: \
 dependencies/install:
 	$(MKDIR_P) dependencies$Sinstall
 
-dependencies/install/bin: dependencies/install
+dependencies/install/bin: | dependencies/install
 	$(MKDIR_P) dependencies$Sinstall$Sbin
 
-dependencies/install/lib: dependencies/install
+dependencies/install/lib: | dependencies/install
 	$(MKDIR_P) dependencies$Sinstall$Slib
 
-dependencies/install/include: dependencies/install
+dependencies/install/include: | dependencies/install
 	$(MKDIR_P) dependencies$Sinstall$Sinclude
 
-dependencies/install/include/coin: dependencies/install/include
+dependencies/install/include/coin: | dependencies/install/include
 	$(MKDIR_P) dependencies$Sinstall$Sinclude$Scoin
 
 ##############
 ##  GFLAGS  ##
 ##############
 # This uses gflags cmake-based build.
-build_gflags: dependencies/install/include/gflags/gflags.h
+build_gflags: dependencies/install/lib/libgflags.so
 
-dependencies/install/include/gflags/gflags.h: dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake/Makefile
-	cd dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake && \
-	$(SET_COMPILER) make -j 4 && make install
-	touch $@
+dependencies/install/lib/libgflags.so: dependencies/sources/gflags-$(GFLAGS_TAG) | dependencies/install
+	cd dependencies/sources/gflags-$(GFLAGS_TAG) && \
+  $(SET_COMPILER) $(CMAKE) -H. -Bbuild \
+    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_STATIC_LIBS=OFF \
+    -DBUILD_TESTING=OFF \
+    -DGFLAGS_NAMESPACE=gflags \
+    -DCMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
+    -DCMAKE_INSTALL_PREFIX=../../install && \
+  $(CMAKE) --build build -- -j 4 && \
+  $(CMAKE) --build build --target install
 
-dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake/Makefile: dependencies/sources/gflags-$(GFLAGS_TAG)/CMakeLists.txt
-	-mkdir dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake
-	cd dependencies/sources/gflags-$(GFLAGS_TAG)/build_cmake && $(SET_COMPILER) \
-	$(CMAKE) -D BUILD_SHARED_LIBS=ON \
-           -D BUILD_STATIC_LIBS=ON \
-           -D CMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
-           -D CMAKE_INSTALL_PREFIX=../../../install \
-           ..
-
-dependencies/sources/gflags-$(GFLAGS_TAG)/CMakeLists.txt:
+dependencies/sources/gflags-$(GFLAGS_TAG): | dependencies/sources
 	git clone --quiet -b v$(GFLAGS_TAG) https://github.com/gflags/gflags.git dependencies/sources/gflags-$(GFLAGS_TAG)
 
 GFLAGS_INC = -I$(UNIX_GFLAGS_DIR)/include
@@ -128,31 +126,30 @@ DYNAMIC_GFLAGS_LNK = -L$(UNIX_GFLAGS_DIR)/lib -lgflags
 
 ifeq ($(UNIX_GFLAGS_DIR), $(OR_TOOLS_TOP)/dependencies/install)
 DEPENDENCIES_LNK += $(DYNAMIC_GFLAGS_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_GFLAGS_LNK)
 else
 DEPENDENCIES_LNK += $(DYNAMIC_GFLAGS_LNK)
-#OR_TOOLS_LNK += $(DYNAMIC_GFLAGS_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_GFLAGS_LNK)
 endif
 
 ############
 ##  GLOG  ##
 ############
 # This uses glog cmake-based build.
-build_glog: dependencies/install/include/glog/logging.h
+build_glog: dependencies/install/lib/libglog.so
 
-dependencies/install/include/glog/logging.h: dependencies/sources/glog-$(GLOG_TAG)/build_cmake/Makefile
-	cd dependencies/sources/glog-$(GLOG_TAG)/build_cmake && $(SET_COMPILER) make -j 4 && make install
-	touch $@
+dependencies/install/lib/libglog.so: dependencies/install/lib/libgflags.so dependencies/sources/glog-$(GLOG_TAG) | dependencies/install
+	cd dependencies/sources/glog-$(GLOG_TAG) && \
+  $(SET_COMPILER) $(CMAKE) -H. -Bbuild \
+    -DCMAKE_PREFIX_PATH="$(OR_TOOLS_TOP)/dependencies/install" \
+    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_TESTING=OFF \
+    -DCMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
+    -DCMAKE_INSTALL_PREFIX=../../install && \
+  $(CMAKE) --build build -- -j 4 && \
+  $(CMAKE) --build build --target install
 
-dependencies/sources/glog-$(GLOG_TAG)/build_cmake/Makefile: dependencies/sources/glog-$(GLOG_TAG)/CMakeLists.txt | build_gflags
-	-$(MKDIR) dependencies/sources/glog-$(GLOG_TAG)/build_cmake
-	cd dependencies/sources/glog-$(GLOG_TAG)/build_cmake && \
-	$(CMAKE) -D CMAKE_PREFIX_PATH="$(OR_TOOLS_TOP)/dependencies/install" \
-           -D BUILD_SHARED_LIBS=ON \
-           -D CMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
-           -D CMAKE_INSTALL_PREFIX=../../../install \
-           ..
-
-dependencies/sources/glog-$(GLOG_TAG)/CMakeLists.txt:
+dependencies/sources/glog-$(GLOG_TAG): | dependencies/sources
 	git clone --quiet -b v$(GLOG_TAG) https://github.com/google/glog.git dependencies/sources/glog-$(GLOG_TAG)
 
 GLOG_INC = -I$(UNIX_GLOG_DIR)/include
@@ -161,9 +158,10 @@ DYNAMIC_GLOG_LNK = -L$(UNIX_GLOG_DIR)/lib -lglog
 
 ifeq ($(UNIX_GLOG_DIR), $(OR_TOOLS_TOP)/dependencies/install)
 DEPENDENCIES_LNK += $(DYNAMIC_GLOG_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_GLOG_LNK)
 else
 DEPENDENCIES_LNK += $(DYNAMIC_GLOG_LNK)
-#OR_TOOLS_LNK += $(DYNAMIC_GLOG_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_GLOG_LNK)
 endif
 
 ################
@@ -172,22 +170,21 @@ endif
 # This uses Protobuf cmake-based build.
 build_protobuf: dependencies/install/bin/protoc
 
-dependencies/install/bin/protoc: dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build/Makefile
-	cd dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build && $(SET_COMPILER) make -j 4 && make install
+dependencies/install/bin/protoc: dependencies/install/lib/libglog.so dependencies/sources/protobuf-$(PROTOBUF_TAG) | dependencies/install
+	cd dependencies/sources/protobuf-$(PROTOBUF_TAG) && \
+  $(SET_COMPILER) $(CMAKE) -Hcmake -Bbuild \
+    -DCMAKE_PREFIX_PATH="$(OR_TOOLS_TOP)/dependencies/install" \
+    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_TESTING=OFF \
+    -Dprotobuf_BUILD_TESTS=OFF \
+    -Dprotobuf_BUILD_EXAMPLES=OFF \
+    -DCMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
+    -DCMAKE_INSTALL_PREFIX=../../install && \
+  $(CMAKE) --build build -- -j 4 && \
+  $(CMAKE) --build build --target install
 
-dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build/Makefile: dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/CMakeLists.txt
-	-$(MKDIR) dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build
-	cd dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/build && \
-	$(CMAKE) -D CMAKE_INSTALL_PREFIX=../../../../install \
-           -D protobuf_BUILD_TESTS=OFF \
-           -D BUILD_SHARED_LIBS=ON \
-           -D CMAKE_CXX_FLAGS="-fPIC $(MAC_VERSION)" \
-           ..
-
-dependencies/sources/protobuf-$(PROTOBUF_TAG)/cmake/CMakeLists.txt:
-	git clone --quiet https://github.com/google/protobuf.git dependencies/sources/protobuf-$(PROTOBUF_TAG) && \
-		cd dependencies/sources/protobuf-$(PROTOBUF_TAG) && \
-		git checkout tags/v$(PROTOBUF_TAG) -b $(PROTOBUF_TAG)
+dependencies/sources/protobuf-$(PROTOBUF_TAG): | dependencies/sources
+	git clone --quiet -b v$(PROTOBUF_TAG) https://github.com/google/protobuf.git dependencies/sources/protobuf-$(PROTOBUF_TAG)\
 
 # Install Java protobuf
 dependencies/install/lib/protobuf.jar: dependencies/install/bin/protoc
@@ -213,9 +210,10 @@ DYNAMIC_PROTOBUF_LNK = -L$(dir $(_PROTOBUF_LIB_DIR)) -lprotobuf
 
 ifeq ($(UNIX_PROTOBUF_DIR), $(OR_TOOLS_TOP)/dependencies/install)
 DEPENDENCIES_LNK += $(DYNAMIC_PROTOBUF_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_PROTOBUF_LNK)
 else
 DEPENDENCIES_LNK += $(DYNAMIC_PROTOBUF_LNK)
-#OR_TOOLS_LNK += $(DYNAMIC_PROTOBUF_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_PROTOBUF_LNK)
 endif
 # Define Protoc
 ifeq ($(PLATFORM),LINUX)
@@ -229,31 +227,25 @@ endif
 ###################
 ##  COIN-OR-CBC  ##
 ###################
-build_cbc: build_cgl dependencies/install/lib/libCbc.so
+build_cbc: dependencies/install/lib/libCbc.so
 
-dependencies/install/lib/libCbc.so: dependencies/sources/Cbc-$(CBC_TAG) | dependencies/install/lib
+dependencies/install/lib/libCbc.so: dependencies/install/lib/libCgl.so dependencies/sources/Cbc-$(CBC_TAG) | dependencies/install/lib
 	cd dependencies/sources/Cbc-$(CBC_TAG) && \
-		$(SET_COMPILER) ./configure \
-		--prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-debug \
-		--without-blas \
-		--without-lapack \
-		--without-glpk \
-		--with-pic \
-		--enable-dependency-linking \
-		--enable-cbc-parallel \
-		ADD_CXXFLAGS="-w -DCBC_THREAD_SAFE -DCBC_NO_INTERRUPT $(MAC_VERSION)" && \
-		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+  $(SET_COMPILER) ./configure \
+    --prefix=$(OR_ROOT_FULL)/dependencies/install \
+    --disable-debug \
+    --without-blas \
+    --without-lapack \
+    --without-glpk \
+    --with-pic \
+    --enable-dependency-linking \
+    --enable-cbc-parallel \
+    ADD_CXXFLAGS="-w -DCBC_THREAD_SAFE -DCBC_NO_INTERRUPT $(MAC_VERSION)" && \
+  $(SET_COMPILER) make -j 4 && \
+  $(SET_COMPILER) make install
 
-CBC_ARCHIVE_NAME:=Cbc-$(CBC_TAG).tar.gz
-dependencies/sources/Cbc-$(CBC_TAG): dependencies/archives/$(CBC_ARCHIVE_NAME) | dependencies/sources
-	$(MKDIR_P) dependencies/sources/Cbc-$(CBC_TAG)
-	tar xzf dependencies/archives/$(CBC_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Cbc-$(CBC_TAG)
-
-CBC_ARCHIVE_URL:=https://github.com/coin-or/Cbc/archive/releases/$(CBC_TAG).tar.gz
-dependencies/archives/$(CBC_ARCHIVE_NAME): | dependencies/archives
-	wget --quiet --no-check-certificate -O dependencies/archives/$(CBC_ARCHIVE_NAME) $(CBC_ARCHIVE_URL) || \
-		$(error failed to dowload $(CBC_ARCHIVE_URL))
+dependencies/sources/Cbc-$(CBC_TAG): | dependencies/sources
+	git clone --quiet -b releases/$(CBC_TAG) https://github.com/coin-or/Cbc.git dependencies/sources/Cbc-$(CBC_TAG)
 
 # This is needed to find CBC include files.
 CBC_COIN_DIR = $(firstword $(wildcard $(UNIX_CBC_DIR)/include/cbc/coin \
@@ -271,30 +263,24 @@ DYNAMIC_CBC_LNK = -L$(UNIX_CBC_DIR)/lib$(UNIX_CBC_COIN) -lCbcSolver -lCbc -lOsiC
 ###################
 ##  COIN-OR-CGL  ##
 ###################
-build_cgl: build_clp dependencies/install/lib/libCgl.so
+build_cgl: dependencies/install/lib/libCgl.so
 
-dependencies/install/lib/libCgl.so: dependencies/sources/Cgl-$(CGL_TAG) | dependencies/install/lib
+dependencies/install/lib/libCgl.so: dependencies/install/lib/libClp.so dependencies/sources/Cgl-$(CGL_TAG) | dependencies/install/lib
 	cd dependencies/sources/Cgl-$(CGL_TAG) && \
-		$(SET_COMPILER) ./configure \
-		--prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-debug \
-		--without-blas \
-		--without-lapack \
-		--without-glpk \
-		--with-pic \
-		--enable-dependency-linking \
-		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
-		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+  $(SET_COMPILER) ./configure \
+    --prefix=$(OR_ROOT_FULL)/dependencies/install \
+    --disable-debug \
+    --without-blas \
+    --without-lapack \
+    --without-glpk \
+    --with-pic \
+    --enable-dependency-linking \
+    ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+  $(SET_COMPILER) make -j 4 && \
+  $(SET_COMPILER) make install
 
-CGL_ARCHIVE_NAME:=Cgl-$(CGL_TAG).tar.gz
-dependencies/sources/Cgl-$(CGL_TAG): dependencies/archives/$(CGL_ARCHIVE_NAME) | dependencies/sources
-	$(MKDIR_P) dependencies/sources/Cgl-$(CGL_TAG)
-	tar xzf dependencies/archives/$(CGL_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Cgl-$(CGL_TAG)
-
-CGL_ARCHIVE_URL:=https://github.com/coin-or/Cgl/archive/releases/$(CGL_TAG).tar.gz
-dependencies/archives/$(CGL_ARCHIVE_NAME): | dependencies/archives
-	wget --quiet --no-check-certificate -O dependencies/archives/$(CGL_ARCHIVE_NAME) $(CGL_ARCHIVE_URL) || \
-		$(error failed to dowload $(CGL_ARCHIVE_URL))
+dependencies/sources/Cgl-$(CGL_TAG): | dependencies/sources
+	git clone --quiet -b releases/$(CGL_TAG) https://github.com/coin-or/Cgl.git dependencies/sources/Cgl-$(CGL_TAG)
 
 # This is needed to find CGL include files.
 CGL_COIN_DIR = $(firstword $(wildcard $(UNIX_CGL_DIR)/include/cgl/coin \
@@ -310,30 +296,24 @@ DYNAMIC_CGL_LNK = -L$(UNIX_CGL_DIR)/lib$(UNIX_CGL_COIN) -lCgl
 ###################
 ##  COIN-OR-CLP  ##
 ###################
-build_clp: build_osi dependencies/install/lib/libClp.so
+build_clp: dependencies/install/lib/libClp.so
 
-dependencies/install/lib/libClp.so: dependencies/sources/Clp-$(CLP_TAG) | dependencies/install/lib
+dependencies/install/lib/libClp.so: dependencies/install/lib/libOsi.so dependencies/sources/Clp-$(CLP_TAG) | dependencies/install/lib
 	cd dependencies/sources/Clp-$(CLP_TAG) && \
-		$(SET_COMPILER) ./configure \
-		--prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-debug \
-		--without-blas \
-		--without-lapack \
-		--without-glpk \
-		--with-pic \
-		--enable-dependency-linking \
-		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
-		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+  $(SET_COMPILER) ./configure \
+    --prefix=$(OR_ROOT_FULL)/dependencies/install \
+    --disable-debug \
+    --without-blas \
+    --without-lapack \
+    --without-glpk \
+    --with-pic \
+    --enable-dependency-linking \
+    ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+  $(SET_COMPILER) make -j 4 && \
+  $(SET_COMPILER) make install
 
-CLP_ARCHIVE_NAME:=Clp-$(CLP_TAG).tar.gz
-dependencies/sources/Clp-$(CLP_TAG): dependencies/archives/$(CLP_ARCHIVE_NAME) | dependencies/sources
-	$(MKDIR_P) dependencies/sources/Clp-$(CLP_TAG)
-	tar xzf dependencies/archives/$(CLP_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Clp-$(CLP_TAG)
-
-CLP_ARCHIVE_URL:=https://github.com/coin-or/Clp/archive/releases/$(CLP_TAG).tar.gz
-dependencies/archives/$(CLP_ARCHIVE_NAME): | dependencies/archives
-	wget --quiet --no-check-certificate -O dependencies/archives/$(CLP_ARCHIVE_NAME) $(CLP_ARCHIVE_URL) || \
-		$(error failed to dowload $(CLP_ARCHIVE_URL))
+dependencies/sources/Clp-$(CLP_TAG): | dependencies/sources
+	git clone --quiet -b releases/$(CLP_TAG) https://github.com/coin-or/Clp.git dependencies/sources/Clp-$(CLP_TAG)
 
 # This is needed to find CLP include files.
 CLP_COIN_DIR = $(firstword $(wildcard $(UNIX_CLP_DIR)/include/clp/coin \
@@ -351,31 +331,25 @@ DYNAMIC_CLP_LNK = -L$(UNIX_CLP_DIR)/lib$(UNIX_CLP_COIN) -lClpSolver -lClp -lOsiC
 ###################
 ##  COIN-OR-OSI  ##
 ###################
-build_osi: build_coinutils dependencies/install/lib/libOsi.so
+build_osi: dependencies/install/lib/libOsi.so
 
-dependencies/install/lib/libOsi.so: dependencies/sources/Osi-$(OSI_TAG) | dependencies/install/lib
+dependencies/install/lib/libOsi.so: dependencies/install/lib/libCoinUtils.so dependencies/sources/Osi-$(OSI_TAG) | dependencies/install/lib
 	cd dependencies/sources/Osi-$(OSI_TAG) && \
-		$(SET_COMPILER) ./configure \
-		--prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-debug \
-		--without-blas \
-		--without-lapack \
-		--without-glpk \
-		--with-pic \
-		--with-coinutils \
-		--enable-dependency-linking \
-		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
-		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+  $(SET_COMPILER) ./configure \
+    --prefix=$(OR_ROOT_FULL)/dependencies/install \
+    --disable-debug \
+    --without-blas \
+    --without-lapack \
+    --without-glpk \
+    --with-pic \
+    --with-coinutils \
+    --enable-dependency-linking \
+    ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+  $(SET_COMPILER) make -j 4 && \
+  $(SET_COMPILER) make install
 
-OSI_ARCHIVE_NAME:=Osi-$(OSI_TAG).tar.gz
-dependencies/sources/Osi-$(OSI_TAG): dependencies/archives/$(OSI_ARCHIVE_NAME) | dependencies/sources
-	$(MKDIR_P) dependencies/sources/Osi-$(OSI_TAG)
-	tar xzf dependencies/archives/$(OSI_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/Osi-$(OSI_TAG)
-
-OSI_ARCHIVE_URL:=https://github.com/coin-or/Osi/archive/releases/$(OSI_TAG).tar.gz
-dependencies/archives/$(OSI_ARCHIVE_NAME): | dependencies/archives
-	wget --quiet --no-check-certificate -O dependencies/archives/$(OSI_ARCHIVE_NAME) $(OSI_ARCHIVE_URL) || \
-		$(error failed to dowload $(OSI_ARCHIVE_URL))
+dependencies/sources/Osi-$(OSI_TAG): | dependencies/sources
+	git clone --quiet -b releases/$(OSI_TAG) https://github.com/coin-or/Osi.git dependencies/sources/Osi-$(OSI_TAG)
 
 # This is needed to find OSI include files.
 OSI_COIN_DIR = $(firstword $(wildcard $(UNIX_OSI_DIR)/include/osi/coin \
@@ -395,26 +369,20 @@ build_coinutils: dependencies/install/lib/libCoinUtils.so
 
 dependencies/install/lib/libCoinUtils.so: dependencies/sources/CoinUtils-$(COINUTILS_TAG) | dependencies/install/lib
 	cd dependencies/sources/CoinUtils-$(COINUTILS_TAG) && \
-		$(SET_COMPILER) ./configure \
-		--prefix=$(OR_ROOT_FULL)/dependencies/install \
-		--disable-debug \
-		--without-blas \
-		--without-lapack \
-		--without-glpk \
-		--with-pic \
-		--enable-dependency-linking \
-		ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
-		$(SET_COMPILER) make -j 4 && $(SET_COMPILER) make install
+  $(SET_COMPILER) ./configure \
+    --prefix=$(OR_ROOT_FULL)/dependencies/install \
+    --disable-debug \
+    --without-blas \
+    --without-lapack \
+    --without-glpk \
+    --with-pic \
+    --enable-dependency-linking \
+    ADD_CXXFLAGS="-w $(MAC_VERSION)" && \
+  $(SET_COMPILER) make -j 4 && \
+  $(SET_COMPILER) make install
 
-COINUTILS_ARCHIVE_NAME:=CoinUtils-$(COINUTILS_TAG).tar.gz
-dependencies/sources/CoinUtils-$(COINUTILS_TAG): dependencies/archives/$(COINUTILS_ARCHIVE_NAME) | dependencies/sources
-	$(MKDIR_P) dependencies/sources/CoinUtils-$(COINUTILS_TAG)
-	tar xzf dependencies/archives/$(COINUTILS_ARCHIVE_NAME) --strip-components=1 -C dependencies/sources/CoinUtils-$(COINUTILS_TAG)
-
-COINUTILS_ARCHIVE_URL:=https://github.com/coin-or/CoinUtils/archive/releases/$(COINUTILS_TAG).tar.gz
-dependencies/archives/$(COINUTILS_ARCHIVE_NAME): | dependencies/archives
-	wget --quiet --no-check-certificate -O dependencies/archives/$(COINUTILS_ARCHIVE_NAME) $(COINUTILS_ARCHIVE_URL) || \
-		$(error failed to dowload $(COINUTILS_ARCHIVE_URL))
+dependencies/sources/CoinUtils-$(COINUTILS_TAG): | dependencies/sources
+	git clone --quiet -b releases/$(COINUTILS_TAG) https://github.com/coin-or/CoinUtils.git dependencies/sources/CoinUtils-$(COINUTILS_TAG)
 
 # This is needed to find COINUTILS include files.
 COINUTILS_COIN_DIR = $(firstword $(wildcard $(UNIX_COINUTILS_DIR)/include/coinutils/coin \
@@ -458,9 +426,10 @@ DYNAMIC_COIN_LNK = \
 
 ifeq ($(UNIX_CBC_DIR), $(OR_TOOLS_TOP)/dependencies/install)
 DEPENDENCIES_LNK += $(DYNAMIC_COIN_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_COIN_LNK)
 else
 DEPENDENCIES_LNK += $(DYNAMIC_COIN_LNK)
-#OR_TOOLS_LNK += $(DYNAMIC_COIN_LNK)
+OR_TOOLS_LNK += $(DYNAMIC_COIN_LNK)
 endif
 
 ############

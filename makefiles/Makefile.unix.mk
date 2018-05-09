@@ -24,7 +24,7 @@ PDB=.pdb
 EXP=.exp
 ARCHIVE_EXT = .tar.gz
 FZ_EXE = fzn-or-tools$E
-LDOUT = -o # need the space.
+LD_OUT = -o # need the space.
 OBJ_OUT = -o #
 EXE_OUT = -o #
 S = /
@@ -147,19 +147,18 @@ ifeq ($(PLATFORM),LINUX)
 
   LIB_SUFFIX = so
   SWIG_LIB_SUFFIX = so
-  LINK_CMD = g++ -shared
-  LINK_PREFIX = -o # Need the space.
-  PRE_LIB = -Wl,-rpath,"\$$ORIGIN:$(OR_ROOT_FULL)/dependencies/install/lib" -L$(OR_ROOT_FULL)/lib -l
+  LINK_CMD = $(DYNAMIC_LD)
+  PRE_LIB = -L$(OR_ROOT_FULL)/lib -l
   #PRE_LIB = -Wl,-rpath $(OR_ROOT_FULL)/lib -L$(OR_ROOT_FULL)/lib -l
   POST_LIB =
-  LINK_FLAGS = -Wl,-rpath,"\$$ORIGIN:$(OR_ROOT_FULL)/dependencies/install/lib"
+  LINK_FLAGS = -Wl,-rpath,"\$$ORIGIN:\$$ORIGIN/../dependencies/install/lib"
 endif  # LINUX
 ifeq ($(PLATFORM),MACOSX)
   MAC_VERSION = -mmacosx-version-min=$(MAC_MIN_VERSION)
   CCC = clang++ -fPIC -std=c++11  $(MAC_VERSION) -stdlib=libc++
   DYNAMIC_LD = ld -arch x86_64 -bundle -flat_namespace -undefined suppress \
- -macosx_version_min $(MAC_MIN_VERSION) \
- -lSystem -compatibility_version $(OR_TOOLS_SHORT_VERSION) \
+ -macosx_version_min $(MAC_MIN_VERSION) -lSystem \
+ -compatibility_version $(OR_TOOLS_SHORT_VERSION) \
  -current_version $(OR_TOOLS_SHORT_VERSION)
 
   MONO =  DYLD_FALLBACK_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) $(MONO_EXECUTABLE)
@@ -201,9 +200,9 @@ ifeq ($(PLATFORM),MACOSX)
  -macosx_version_min $(MAC_MIN_VERSION) -lSystem \
  -compatibility_version $(OR_TOOLS_SHORT_VERSION) \
  -current_version $(OR_TOOLS_SHORT_VERSION)
-  LINK_PREFIX = -o # Space needed.
   PRE_LIB = -L$(OR_ROOT)lib -l
   POST_LIB =
+  LINK_FLAGS = -Wl,-rpath,"@loader_path;@loader_path/../dependencies/install/lib"
 endif  # MAC OS X
 
 DEPENDENCIES_INC = -I$(INC_DIR) -I$(EX_DIR) -I$(GEN_DIR) \
@@ -214,5 +213,5 @@ DEPENDENCIES_INC = -I$(INC_DIR) -I$(EX_DIR) -I$(GEN_DIR) \
 
 CFLAGS = $(DEBUG) $(DEPENDENCIES_INC)
 JNIFLAGS = $(JNIDEBUG) $(DEPENDENCIES_INC)
-OR_TOOLS_LD_FLAGS = $(ZLIB_LNK) $(SYS_LNK)
+OR_TOOLS_LD_FLAGS = $(ZLIB_LNK) $(SYS_LNK) $(LINK_FLAGS)
 DEPENDENCIES_LNK = $(GLPK_LNK) $(SCIP_LNK) $(GUROBI_LNK) $(CPLEX_LNK)

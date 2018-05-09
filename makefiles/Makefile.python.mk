@@ -160,7 +160,7 @@ $(OBJ_DIR)/swig/knapsack_solver_python_wrap.$O: $(GEN_DIR)/ortools/algorithms/kn
 	$(CCC) $(CFLAGS) $(PYTHON_INC) $(PYTHON3_CFLAGS) -c $(GEN_DIR)$Sortools$Salgorithms$Sknapsack_solver_python_wrap.cc $(OBJ_OUT)$(OBJ_DIR)$Sswig$Sknapsack_solver_python_wrap.$O
 
 $(LIB_DIR)/_pywrapknapsack_solver.$(SWIG_LIB_SUFFIX): $(OBJ_DIR)/swig/knapsack_solver_python_wrap.$O $(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywrapknapsack_solver.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sknapsack_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywrapknapsack_solver.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sknapsack_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywrapknapsack_solver.dll $(GEN_DIR)\\ortools\\algorithms\\_pywrapknapsack_solver.pyd
 else
@@ -186,7 +186,7 @@ $(OBJ_DIR)/swig/graph_python_wrap.$O: $(GEN_DIR)/ortools/graph/graph_python_wrap
 	$(CCC) $(CFLAGS) $(PYTHON_INC)  $(PYTHON3_CFLAGS) -c $(GEN_DIR)/ortools/graph/graph_python_wrap.cc $(OBJ_OUT)$(OBJ_DIR)$Sswig$Sgraph_python_wrap.$O
 
 $(LIB_DIR)/_pywrapgraph.$(SWIG_LIB_SUFFIX): $(OBJ_DIR)/swig/graph_python_wrap.$O $(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywrapgraph.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sgraph_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywrapgraph.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sgraph_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywrapgraph.dll $(GEN_DIR)\\ortools\\graph\\_pywrapgraph.pyd
 else
@@ -244,7 +244,7 @@ $(OBJ_DIR)/swig/constraint_solver_python_wrap.$O: $(GEN_DIR)/ortools/constraint_
 $(LIB_DIR)/_pywrapcp.$(SWIG_LIB_SUFFIX): \
 		$(OBJ_DIR)/swig/constraint_solver_python_wrap.$O \
 			$(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywrapcp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sconstraint_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywrapcp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Sconstraint_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywrapcp.dll $(GEN_DIR)\\ortools\\constraint_solver\\_pywrapcp.pyd
 else
@@ -278,7 +278,7 @@ $(OBJ_DIR)/swig/linear_solver_python_wrap.$O: $(GEN_DIR)/ortools/linear_solver/l
 $(LIB_DIR)/_pywraplp.$(SWIG_LIB_SUFFIX): \
 		$(OBJ_DIR)/swig/linear_solver_python_wrap.$O \
 			$(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywraplp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Slinear_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywraplp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Slinear_solver_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywraplp.dll $(GEN_DIR)\\ortools\\linear_solver\\_pywraplp.pyd
 else
@@ -312,7 +312,7 @@ $(OBJ_DIR)/swig/sat_python_wrap.$O: $(GEN_DIR)/ortools/sat/sat_python_wrap.cc $(
 $(LIB_DIR)/_pywrapsat.$(SWIG_LIB_SUFFIX): \
 		$(OBJ_DIR)/swig/sat_python_wrap.$O \
 			$(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywrapsat.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Ssat_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywrapsat.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Ssat_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywrapsat.dll $(GEN_DIR)\\ortools\\sat\\_pywrapsat.pyd
 else
@@ -342,7 +342,7 @@ $(OBJ_DIR)/swig/rcpsp_python_wrap.$O: $(GEN_DIR)/ortools/data/rcpsp_python_wrap.
 $(LIB_DIR)/_pywraprcpsp.$(SWIG_LIB_SUFFIX): \
 		$(OBJ_DIR)/swig/rcpsp_python_wrap.$O \
 			$(OR_TOOLS_LIBS)
-	$(DYNAMIC_LD) $(LDOUT)$(LIB_DIR)$S_pywraprcpsp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Srcpsp_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
+	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S_pywraprcpsp.$(SWIG_LIB_SUFFIX) $(OBJ_DIR)$Sswig$Srcpsp_python_wrap.$O $(OR_TOOLS_LNK) $(SYS_LNK) $(PYTHON_LNK)
 ifeq ($(SYSTEM),win)
 	copy $(LIB_DIR)\\_pywraprcpsp.dll $(GEN_DIR)\\ortools\\data\\_pywraprcpsp.pyd
 else
